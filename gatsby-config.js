@@ -1,3 +1,37 @@
+require('dotenv').config({
+  path: `.env`,
+})
+
+// gatsby-config.js
+const myQuery = `{
+  allMarkdownRemark(sort: { fields: [frontmatter___date], order: DESC }) {
+    edges {
+      node {
+        excerpt
+        fields {
+          slug
+        }
+        frontmatter {
+          date(formatString: "MMMM DD, YYYY")
+          title
+          description
+        }
+      }
+    }
+  }
+}`;
+
+const queries = [
+  {
+    query: myQuery,
+    transformer: ({ data }) => data.allMarkdownRemark.edges.map(({ node }) => node), // optional
+    indexName: process.env.ALGOLIA_INDEX_NAME, // overrides main index name, optional
+  },
+];
+
+
+
+
 module.exports = {
   siteMetadata: {
     title: `Gatsby Starter Blog`,
@@ -9,6 +43,16 @@ module.exports = {
     },
   },
   plugins: [
+    {
+      resolve: `gatsby-plugin-algolia`,
+      options: {
+        appId: process.env.ALGOLIA_APP_ID,
+        apiKey: process.env.ALGOLIA_API_KEY,
+        indexName: process.env.ALGOLIA_INDEX_NAME, // for all queries
+        queries,
+        chunkSize: 10000, // default: 1000
+      },
+    },
     {
       resolve: `gatsby-source-filesystem`,
       options: {
